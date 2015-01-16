@@ -1,0 +1,18 @@
+[Unit]
+Description=%n
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+
+ExecStartPre=-/usr/bin/docker kill %n
+ExecStartPre=-/usr/bin/docker rm %n
+ExecStartPre=/bin/sh -c "/usr/bin/docker pull `etcdctl get /services/my_service/image`:latest"
+ExecStart=/bin/sh -c "\
+    /usr/bin/docker run --name %n -h %H \
+    -v `etcdctl get /services/my_service/volumes/data`:/home \
+    -p 8080 \
+    `etcdctl get /services/my_service/image`"
+
+ExecStop=/usr/bin/docker stop -t 3 %n
